@@ -1,0 +1,74 @@
+EJ 3 PROCEDIMIENTO ALMACENADO
+
+drop procedure if exists PA_3;
+Delimiter $$
+create procedure PA_3 (IN _año int)
+begin
+
+declare _termino bool default false;
+declare _mestemporal int default 0;
+declare _mesactual int default 0;
+declare _montotemporal int default 0;
+declare _montoactual int default 0;
+declare c1 cursor for
+select month(fecha_orden), monto_total from orden_compra where year(fecha_orden) = _año;
+declare continue handler for sqlstate '02000' set _termino = 1;
+
+open c1;
+c1_loop : loop
+fetch c1 into mesactual, montoactual;
+if(_montoactual > _montotemporal) then
+set mestemporal = mesactual;
+set montotemporal = montoactual;
+end if;
+if '_termino' then leave c1_loop; end if;
+end loop c1_loop;
+close c1;
+
+select _mestemporal;
+
+end $$
+delimiter ;
+
+call PA_3 (2017);
+
+
+
+TRIGGERS EJ 1
+
+drop trigger if exists TR_1;
+DELIMITER $$
+Create trigger TR_1 after insert
+
+
+TRIGGERS EJ 2
+
+Drop Trigger if exists TR_2;
+Delimiter $$
+Create Trigger TR_2 before insert on Orden_Compra
+Begin
+if (monto_total > 1000000 and Orden_Compra < 0)
+update Orden_Compra
+set Estado='Pendiente';
+end if;
+End $$
+Delimiter ;
+
+TRIGGERS EJ 3
+
+Drop Trigger if exists TR_3;
+Delimiter $$
+Create Trigger TR_3 before insert on Ítem_Compra
+Begin
+if (cant_pedida = 0 or cant_solicitud > cant_pedida)
+update Item_Compra
+set new.cant_pedida = 0;
+set new.cant_solicitud = 0;
+update Orden_Compra
+set new.Estado = 'Pendiente';
+end if;
+End $$
+Delimiter ;
+
+
+
